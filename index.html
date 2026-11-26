@@ -1,1 +1,522 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestión Empresarial Integral</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --card-2: #0b1220;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #10b981;
+      --accent-2: #3b82f6;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    body { margin: 0; background: var(--bg); color: var(--text); padding-bottom: 84px; }
+    header {
+      background: var(--card-2);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    header h1 { margin: 0; font-size: 1.05rem; }
+    header small { color: var(--muted); display: block; font-size: 0.78rem; }
+    .container { max-width: 920px; margin: 0 auto; padding: 14px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 10px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .kpi-val { font-size: 1.35rem; font-weight: 700; margin-top: 4px; color: var(--accent); }
+    .kpi-label { font-size: 0.8rem; color: var(--muted); }
+    h2 { margin: 0 0 10px; font-size: 1.05rem; }
+    h3 { margin: 14px 0 8px; font-size: 0.95rem; color: #cbd5e1; }
+    label { display: block; font-size: 0.82rem; color: var(--muted); margin-top: 8px; margin-bottom: 4px; }
+    input, select, textarea {
+      width: 100%;
+      padding: 9px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card-2);
+      color: var(--text);
+      font-size: 0.92rem;
+    }
+    button {
+      background: var(--accent);
+      color: #052e16;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button.secondary { background: var(--accent-2); color: #fff; }
+    button.danger { background: var(--danger); color: #fff; padding: 6px 10px; font-size: 0.8rem; margin-top: 0; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .item {
+      background: var(--card-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px;
+      margin-top: 8px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      background: rgba(16, 185, 129, 0.18);
+      color: #6ee7b7;
+    }
+    .badge.warn { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+    .carnet {
+      background: linear-gradient(135deg, #064e3b, #1e293b);
+      border: 1px solid #10b981;
+      border-radius: 14px;
+      padding: 14px;
+      margin-top: 10px;
+    }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--card-2);
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      z-index: 20;
+    }
+    .nav-btn {
+      background: none;
+      color: var(--muted);
+      border-radius: 0;
+      margin: 0;
+      padding: 10px 4px;
+      font-size: 0.74rem;
+      font-weight: 600;
+    }
+    .nav-btn.active { color: var(--accent); border-top: 2px solid var(--accent); }
+    .section { display: none; }
+    .section.active { display: block; }
+    .muted { color: var(--muted); font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1 id="header-empresa">Gestión Empresarial</h1>
+      <small id="header-sub">Panel administrativo y consulta por cédula</small>
+    </div>
+    <select id="modo-acceso" style="width:auto; padding:6px 8px; font-size:0.8rem;" onchange="cambiarModo()">
+      <option value="admin">Modo: Administrador</option>
+      <option value="empleado">Modo: Empleado (Cédula)</option>
+    </select>
+  </header>
+
+  <div class="container">
+    <!-- RESUMEN -->
+    <section id="sec-resumen" class="section active">
+      <div class="card">
+        <h2>Resumen General</h2>
+        <div class="grid-2">
+          <div class="item">
+            <div class="kpi-label">Empleados registrados</div>
+            <div class="kpi-val" id="kpi-emp">0</div>
+          </div>
+          <div class="item">
+            <div class="kpi-label">Contratos activos</div>
+            <div class="kpi-val" id="kpi-cont">0</div>
+          </div>
+          <div class="item">
+            <div class="kpi-label">Total pagos nómina</div>
+            <div class="kpi-val" id="kpi-pagos">$0</div>
+          </div>
+          <div class="item">
+            <div class="kpi-label">Saldo (Ingresos - Gastos)</div>
+            <div class="kpi-val" id="kpi-saldo">$0</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EMPRESA -->
+    <section id="sec-empresa" class="section">
+      <div class="card">
+        <h2>Información de la Empresa</h2>
+        <form onsubmit="guardarEmpresa(event)">
+          <label>Nombre o razón social</label>
+          <input id="emp-nombre" required placeholder="Ej. Constructora y Servicios S.A.S." />
+          <label>NIT / Identificación tributaria</label>
+          <input id="emp-nit" placeholder="Ej. 900.123.456-7" />
+          <label>Dirección y ciudad</label>
+          <input id="emp-dir" placeholder="Ej. Calle 10 # 20-30, Antioquia" />
+          <label>Representante legal / Encargado</label>
+          <input id="emp-rep" placeholder="Nombre del representante" />
+          <label>Teléfono y correo de contacto</label>
+          <input id="emp-contacto" placeholder="Ej. 300 000 0000 - contacto@empresa.com" />
+          <label>Actividad económica / Observaciones legales</label>
+          <textarea id="emp-info" rows="3" placeholder="Detalles de la empresa, pólizas generales, normativas..."></textarea>
+          <button type="submit" class="admin-only">Guardar información de la empresa</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- EMPLEADOS Y CONSULTA POR CÉDULA -->
+    <section id="sec-empleados" class="section">
+      <div class="card">
+        <h2>Consulta de Empleado por Cédula (Carnet, ARL, Póliza, Permisos y Vacaciones)</h2>
+        <p class="muted">Ingresa el número de cédula del empleado para ver su carnet digital, afiliaciones y registros.</p>
+        <div class="row">
+          <input id="buscar-cedula" placeholder="Escribe el número de cédula..." style="flex:1; min-width:180px;" />
+          <button type="button" class="secondary" onclick="consultarCedula()">Consultar cédula</button>
+        </div>
+        <div id="resultado-cedula"></div>
+      </div>
+
+      <div class="card admin-only">
+        <h2>Registrar Empleado y Documentación</h2>
+        <form onsubmit="agregarEmpleado(event)">
+          <label>Nombre completo</label>
+          <input id="e-nombre" required placeholder="Ej. Juan Pérez Gómez" />
+          <label>Número de cédula</label>
+          <input id="e-cedula" required placeholder="Ej. 1035000111" />
+          <label>Cargo y área</label>
+          <input id="e-cargo" required placeholder="Ej. Operario - Mantenimiento" />
+          <label>ARL (Entidad y estado/vencimiento)</label>
+          <input id="e-arl" placeholder="Ej. Sura ARL - Vigente hasta 31/12/2026" />
+          <label>EPS y Póliza</label>
+          <input id="e-poliza" placeholder="Ej. EPS Sura / Póliza Cumplimiento #4589" />
+          <label>Permisos / Vacaciones</label>
+          <input id="e-vac" placeholder="Ej. 15 días vacaciones disponibles / Sin permisos pendientes" />
+          <button type="submit">Guardar empleado</button>
+        </form>
+      </div>
+
+      <div class="card admin-only">
+        <h3>Listado de Empleados</h3>
+        <div id="lista-empleados"></div>
+      </div>
+    </section>
+
+    <!-- CONTRATOS -->
+    <section id="sec-contratos" class="section">
+      <div class="card admin-only">
+        <h2>Registrar Contrato y Lugar de Ejecución</h2>
+        <form onsubmit="agregarContrato(event)">
+          <label>Nombre o número de contrato</label>
+          <input id="c-titulo" required placeholder="Ej. Contrato CT-2026-01 - Mantenimiento" />
+          <label>Cliente / Entidad</label>
+          <input id="c-cliente" required placeholder="Ej. Empresa Cliente S.A." />
+          <label>Lugar exacto donde se hizo / ejecuta</label>
+          <input id="c-lugar" required placeholder="Ej. Vereda / Barrio / Dirección / Municipio" />
+          <label>Valor del contrato (COP)</label>
+          <input id="c-valor" type="number" step="any" placeholder="Ej. 25000000" />
+          <label>Personal asignado y detalles</label>
+          <input id="c-detalle" placeholder="Ej. Fechas, alcance, trabajadores asignados" />
+          <label>Estado</label>
+          <select id="c-estado">
+            <option value="En ejecución">En ejecución</option>
+            <option value="Pendiente">Pendiente</option>
+            <option value="Finalizado">Finalizado</option>
+          </select>
+          <button type="submit">Guardar contrato</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Contratos Registrados</h2>
+        <div id="lista-contratos"></div>
+      </div>
+    </section>
+
+    <!-- PAGOS Y FINANZAS -->
+    <section id="sec-finanzas" class="section">
+      <div class="card admin-only">
+        <h2>Registrar Pago a Empleado o Movimiento Financiero</h2>
+        <form onsubmit="agregarMovimiento(event)">
+          <label>Tipo de registro</label>
+          <select id="m-tipo">
+            <option value="Pago empleado">Pago a empleado (Nómina / Adelanto / Liquidación)</option>
+            <option value="Ingreso">Ingreso de la empresa</option>
+            <option value="Gasto">Gasto operativo de la empresa</option>
+          </select>
+          <label>Cédula del empleado (si es pago a empleado) o Concepto</label>
+          <input id="m-ref" required placeholder="Ej. Cédula 1035000111 - Quincena / Factura #102" />
+          <label>Monto (COP)</label>
+          <input id="m-monto" type="number" step="any" required placeholder="Ej. 1500000" />
+          <label>Fecha y observación</label>
+          <input id="m-obs" placeholder="Ej. 2026-11-25 - Transferencia" />
+          <button type="submit">Registrar movimiento</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Historial de Pagos y Finanzas</h2>
+        <div id="lista-movimientos"></div>
+      </div>
+    </section>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="irSeccion('resumen', this)">Resumen</button>
+    <button class="nav-btn" onclick="irSeccion('empresa', this)">Empresa</button>
+    <button class="nav-btn" onclick="irSeccion('empleados', this)">Empleados</button>
+    <button class="nav-btn" onclick="irSeccion('contratos', this)">Contratos</button>
+    <button class="nav-btn" onclick="irSeccion('finanzas', this)">Pagos</button>
+  </nav>
+
+  <script>
+    const STORAGE_KEY = "app_empresa_data_v1";
+    const defaultData = {
+      empresa: {
+        nombre: "Mi Empresa",
+        nit: "",
+        dir: "",
+        rep: "",
+        contacto: "",
+        info: ""
+      },
+      empleados: [],
+      contratos: [],
+      movimientos: []
+    };
+
+    let db = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultData;
+
+    function guardarDB() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+      renderTodo();
+    }
+
+    function formatoCOP(valor) {
+      return new Intl.NumberFormat("es-CO", {
+        style: "currency",
+        currency: "COP",
+        maximumFractionDigits: 0
+      }).format(Number(valor || 0));
+    }
+
+    function irSeccion(id, btn) {
+      document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+      document.getElementById("sec-" + id).classList.add("active");
+      document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+      if (btn) btn.classList.add("active");
+    }
+
+    function cambiarModo() {
+      const modo = document.getElementById("modo-acceso").value;
+      const esAdmin = modo === "admin";
+      document.querySelectorAll(".admin-only").forEach(el => {
+        el.style.display = esAdmin ? "" : "none";
+      });
+      if (!esAdmin) {
+        irSeccion("empleados", document.querySelectorAll(".nav-btn")[2]);
+      }
+    }
+
+    function guardarEmpresa(e) {
+      e.preventDefault();
+      db.empresa = {
+        nombre: empNombre.value.trim(),
+        nit: empNit.value.trim(),
+        dir: empDir.value.trim(),
+        rep: empRep.value.trim(),
+        contacto: empContacto.value.trim(),
+        info: empInfo.value.trim()
+      };
+      guardarDB();
+      alert("Información de la empresa guardada.");
+    }
+
+    function agregarEmpleado(e) {
+      e.preventDefault();
+      db.empleados.unshift({
+        id: Date.now(),
+        nombre: eNombre.value.trim(),
+        cedula: eCedula.value.trim(),
+        cargo: eCargo.value.trim(),
+        arl: eArl.value.trim(),
+        poliza: ePoliza.value.trim(),
+        vac: eVac.value.trim()
+      });
+      e.target.reset();
+      guardarDB();
+    }
+
+    function consultarCedula() {
+      const ced = document.getElementById("buscar-cedula").value.trim();
+      const cont = document.getElementById("resultado-cedula");
+      if (!ced) {
+        cont.innerHTML = `<p class="muted">Escribe una cédula para consultar.</p>`;
+        return;
+      }
+      const emp = db.empleados.find(x => x.cedula.toLowerCase() === ced.toLowerCase());
+      if (!emp) {
+        cont.innerHTML = `<div class="item"><span class="badge warn">No encontrado</span> No hay registro con la cédula <strong>${ced}</strong>.</div>`;
+        return;
+      }
+      const pagosEmp = db.movimientos.filter(m => m.tipo === "Pago empleado" && m.ref.toLowerCase().includes(ced.toLowerCase()));
+      const pagosHtml = pagosEmp.length
+        ? pagosEmp.map(p => `<div class="item"><strong>${formatoCOP(p.monto)}</strong> — ${p.ref} <div class="muted">${p.obs || ""}</div></div>`).join("")
+        : `<p class="muted">Sin pagos registrados con esta cédula.</p>`;
+
+      cont.innerHTML = `
+        <div class="carnet">
+          <span class="badge">CARNET DIGITAL ACTIVO</span>
+          <h3 style="margin:8px 0 4px;">${emp.nombre}</h3>
+          <div><strong>Cédula:</strong> ${emp.cedula}</div>
+          <div><strong>Cargo:</strong> ${emp.cargo}</div>
+          <div><strong>ARL:</strong> ${emp.arl || "No registrada"}</div>
+          <div><strong>EPS / Póliza:</strong> ${emp.poliza || "No registrada"}</div>
+          <div><strong>Permisos / Vacaciones:</strong> ${emp.vac || "Sin novedades"}</div>
+        </div>
+        <h3>Pagos asociados a esta cédula</h3>
+        ${pagosHtml}
+      `;
+    }
+
+    function agregarContrato(e) {
+      e.preventDefault();
+      db.contratos.unshift({
+        id: Date.now(),
+        titulo: cTitulo.value.trim(),
+        cliente: cCliente.value.trim(),
+        lugar: cLugar.value.trim(),
+        valor: Number(cValor.value || 0),
+        detalle: cDetalle.value.trim(),
+        estado: cEstado.value
+      });
+      e.target.reset();
+      guardarDB();
+    }
+
+    function agregarMovimiento(e) {
+      e.preventDefault();
+      db.movimientos.unshift({
+        id: Date.now(),
+        tipo: mTipo.value,
+        ref: mRef.value.trim(),
+        monto: Number(mMonto.value || 0),
+        obs: mObs.value.trim()
+      });
+      e.target.reset();
+      guardarDB();
+    }
+
+    function borrarItem(lista, id) {
+      db[lista] = db[lista].filter(item => item.id !== id);
+      guardarDB();
+    }
+
+    const empNombre = document.getElementById("emp-nombre");
+    const empNit = document.getElementById("emp-nit");
+    const empDir = document.getElementById("emp-dir");
+    const empRep = document.getElementById("emp-rep");
+    const empContacto = document.getElementById("emp-contacto");
+    const empInfo = document.getElementById("emp-info");
+    const eNombre = document.getElementById("e-nombre");
+    const eCedula = document.getElementById("e-cedula");
+    const eCargo = document.getElementById("e-cargo");
+    const eArl = document.getElementById("e-arl");
+    const ePoliza = document.getElementById("e-poliza");
+    const eVac = document.getElementById("e-vac");
+    const cTitulo = document.getElementById("c-titulo");
+    const cCliente = document.getElementById("c-cliente");
+    const cLugar = document.getElementById("c-lugar");
+    const cValor = document.getElementById("c-valor");
+    const cDetalle = document.getElementById("c-detalle");
+    const cEstado = document.getElementById("c-estado");
+    const mTipo = document.getElementById("m-tipo");
+    const mRef = document.getElementById("m-ref");
+    const mMonto = document.getElementById("m-monto");
+    const mObs = document.getElementById("m-obs");
+
+    function renderTodo() {
+      document.getElementById("header-empresa").textContent = db.empresa.nombre || "Gestión Empresarial";
+      document.getElementById("header-sub").textContent = db.empresa.nit ? `NIT: ${db.empresa.nit}` : "Panel administrativo y consulta por cédula";
+
+      empNombre.value = db.empresa.nombre || "";
+      empNit.value = db.empresa.nit || "";
+      empDir.value = db.empresa.dir || "";
+      empRep.value = db.empresa.rep || "";
+      empContacto.value = db.empresa.contacto || "";
+      empInfo.value = db.empresa.info || "";
+
+      const activosCont = db.contratos.filter(c => c.estado === "En ejecución").length;
+      const totalPagosEmp = db.movimientos.filter(m => m.tipo === "Pago empleado").reduce((a, b) => a + b.monto, 0);
+      const totalIngresos = db.movimientos.filter(m => m.tipo === "Ingreso").reduce((a, b) => a + b.monto, 0);
+      const totalSalidas = db.movimientos.filter(m => m.tipo !== "Ingreso").reduce((a, b) => a + b.monto, 0);
+
+      document.getElementById("kpi-emp").textContent = db.empleados.length;
+      document.getElementById("kpi-cont").textContent = activosCont;
+      document.getElementById("kpi-pagos").textContent = formatoCOP(totalPagosEmp);
+      document.getElementById("kpi-saldo").textContent = formatoCOP(totalIngresos - totalSalidas);
+
+      document.getElementById("lista-empleados").innerHTML = db.empleados.length
+        ? db.empleados.map(emp => `
+          <div class="item">
+            <div class="row" style="justify-content:space-between;">
+              <strong>${emp.nombre}</strong>
+              <button class="danger" onclick="borrarItem('empleados', ${emp.id})">Eliminar</button>
+            </div>
+            <div class="muted">Cédula: ${emp.cedula} | Cargo: ${emp.cargo}</div>
+            <div class="muted">ARL: ${emp.arl || "-"} | Póliza: ${emp.poliza || "-"}</div>
+            <div class="muted">Permisos/Vacaciones: ${emp.vac || "-"}</div>
+          </div>
+        `).join("")
+        : `<p class="muted">Aún no hay empleados registrados.</p>`;
+
+      document.getElementById("lista-contratos").innerHTML = db.contratos.length
+        ? db.contratos.map(c => `
+          <div class="item">
+            <div class="row" style="justify-content:space-between;">
+              <strong>${c.titulo}</strong>
+              <span class="badge ${c.estado !== "En ejecución" ? "warn" : ""}">${c.estado}</span>
+            </div>
+            <div class="muted">Cliente: ${c.cliente} | <strong>Lugar:</strong> ${c.lugar}</div>
+            <div class="muted">Valor: ${formatoCOP(c.valor)} | ${c.detalle || ""}</div>
+            <div class="admin-only" style="margin-top:8px;">
+              <button class="danger" onclick="borrarItem('contratos', ${c.id})">Eliminar</button>
+            </div>
+          </div>
+        `).join("")
+        : `<p class="muted">Aún no hay contratos registrados.</p>`;
+
+      document.getElementById("lista-movimientos").innerHTML = db.movimientos.length
+        ? db.movimientos.map(m => `
+          <div class="item">
+            <div class="row" style="justify-content:space-between;">
+              <strong>[${m.tipo}] ${formatoCOP(m.monto)}</strong>
+              <button class="danger admin-only" onclick="borrarItem('movimientos', ${m.id})">Eliminar</button>
+            </div>
+            <div class="muted">${m.ref} ${m.obs ? "— " + m.obs : ""}</div>
+          </div>
+        `).join("")
+        : `<p class="muted">Aún no hay movimientos registrados.</p>`;
+
+      cambiarModo();
+    }
+
+    renderTodo();
+  </script>
+</body>
+</html>
 
